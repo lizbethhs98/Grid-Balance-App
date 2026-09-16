@@ -33,18 +33,6 @@ if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('./sw
   --eg-scrim:rgba(5,12,14,.66);
   --color-accent:#2ec4a8; --color-accent-2:#9184d9;
 }
-.eg-app.eg-organic{
-  --eg-page:#e6e0d1;
-  --eg-bg:#f6f2e8; --eg-bg2:#fffdf6; --eg-surface:#fffdf8; --eg-surface2:#fffefb;
-  --eg-line:rgba(18,46,42,.16); --eg-line-soft:rgba(18,46,42,.08);
-  --eg-text:#122e2a; --eg-muted:#5b736e;
-  --eg-accent:#00806d; --eg-accent-brand:#009982; --eg-accent-ink:#ffffff;
-  --eg-accent-soft:rgba(0,153,130,.12);
-  --eg-blue:#1d6d99; --eg-amber:#96601a; --eg-yellow:#7d6111; --eg-violet:#5a51a4;
-  --eg-red:#a8443a; --eg-good:#1d7a56;
-  --eg-scrim:rgba(38,48,45,.42);
-  --color-accent:#00806d;
-}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:#0b1113;display:flex;align-items:flex-start;justify-content:center;min-height:100dvh;font-family:Inter,system-ui,sans-serif;color:#e8f1ee}
 .eg-toptabs{display:none}
@@ -116,7 +104,7 @@ a:hover{color:#009982}
 
     <div onClick="{{ openMix }}" style="grid-column: 1 / -1; border: 1px solid var(--eg-line); border-radius: 12px; background: var(--eg-surface); padding: 11px 12px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 9px; width: 100%; box-sizing: border-box" style-hover="border-color:var(--eg-accent)">
       <div style="display:flex;align-items:center;gap:6px">
-        <div style="flex:1;font-size:9.5px;color:var(--eg-muted)">Fuel Mix · last 24 h average</div>
+        <div style="flex:1;font-size:9.5px;color:var(--eg-muted)">Fuel Mix · now, estimated</div>
         <i class="ph ph-arrows-out-simple" style="font-size:11px;color:var(--eg-muted)"></i>
       </div>
       <div style="display:flex;height:9px;border-radius:99px;overflow:hidden;background:var(--eg-line-soft)">
@@ -188,6 +176,9 @@ a:hover{color:#009982}
   <div style="border:1px solid var(--eg-line);border-radius:14px;background:var(--eg-surface);padding:13px;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;align-items:center;gap:8px">
       <div style="flex:1;font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--eg-muted)">Advice for {{ planHourLabel }}</div>
+      <sc-if value="{{ isPlanning }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ resetPlanHour }}" style="min-height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--eg-line);background:transparent;color:var(--eg-muted);font-family:Inter,system-ui,sans-serif;font-size:10.5px;font-weight:600;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:5px" style-hover="border-color:var(--eg-accent);color:var(--eg-accent)"><i class="ph ph-arrow-counter-clockwise" style="font-size:13px"></i>Now</button>
+      </sc-if>
       <button onClick="{{ openSchedule }}" style="min-height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--eg-line);background:transparent;color:var(--eg-muted);font-family:Inter,system-ui,sans-serif;font-size:10.5px;font-weight:600;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:5px" style-hover="border-color:var(--eg-accent);color:var(--eg-accent)"><i class="ph ph-clock-countdown" style="font-size:13px"></i>Best hours</button>
     </div>
     <div style="display:flex;align-items:flex-start;gap:9px">
@@ -201,6 +192,9 @@ a:hover{color:#009982}
         <div style="font-size:11.5px;font-weight:600">{{ b.usageLabel }}</div>
       </div>
     </sc-for>
+    <sc-if value="{{ hasBreach }}" hint-placeholder-val="{{ false }}">
+    <div style="font-size:10.5px;line-height:1.5;color:var(--eg-muted)">{{ breachFix }}</div>
+    </sc-if>
     <sc-if value="{{ needsApply }}" hint-placeholder-val="{{ false }}">
     <button onClick="{{ applyPlan }}" style="{{ applyStyle }}" style-hover="background:var(--eg-accent-brand)"><i class="ph ph-power" style="font-size:15px"></i>{{ applyLabel }}</button>
     </sc-if>
@@ -261,6 +255,12 @@ a:hover{color:#009982}
       <i class="ph {{ requestIcon }}" style="{{ requestIconStyle }}"></i>
       <div style="flex:1;font-size:11.5px;line-height:1.45;font-weight:500">{{ requestVerdict }}</div>
     </div>
+    <sc-for list="{{ requestDisplaced }}" as="x" hint-placeholder-count="0">
+      <div style="display:flex;align-items:center;gap:9px;padding-left:25px">
+        <div style="flex:1;min-width:0;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.title }}</div>
+        <div style="font-size:10.5px;color:var(--eg-muted);white-space:nowrap">{{ x.detail }}</div>
+      </div>
+    </sc-for>
     </sc-if>
   </div>
 
@@ -275,6 +275,21 @@ a:hover{color:#009982}
 <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
 <div style="padding:14px 16px 24px;display:flex;flex-direction:column;gap:12px">
   
+
+  <div style="border:1px solid var(--eg-line);border-radius:14px;background:var(--eg-surface);padding:13px;display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--eg-muted)">Theme</div>
+    <div style="display:flex;gap:8px">
+      <sc-for list="{{ themeOptions }}" as="t" hint-placeholder-count="2">
+        <button onClick="{{ t.onPick }}" style="{{ t.style }}" style-hover="border-color:var(--eg-accent)">
+          <div style="{{ t.swatchStyle }}"></div>
+          <div style="min-width:0;text-align:left">
+            <div style="font-size:12px;font-weight:600;color:var(--eg-text)">{{ t.label }}</div>
+            <div style="font-size:9.5px;color:var(--eg-muted)">{{ t.sub }}</div>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+  </div>
 
   <div style="border:1px solid var(--eg-line);border-radius:14px;background:var(--eg-surface);padding:13px;display:flex;flex-direction:column;gap:10px">
     <div style="font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--eg-muted)">Capacity</div>
@@ -479,7 +494,7 @@ a:hover{color:#009982}
       <div style="border:1px solid var(--eg-line);border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:6px">
         <div style="display:flex;align-items:baseline;gap:8px">
           <div style="flex:1;font-size:11px;color:var(--eg-muted)">Grid value right now</div>
-          
+          <div style="{{ openHall.costStyle }}">{{ openHall.costLabel }}</div>
         </div>
         <div style="font-size:10px;line-height:1.5;color:var(--eg-muted)">{{ openHall.costNote }}</div>
       </div>
@@ -535,6 +550,8 @@ a:hover{color:#009982}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:920}}">
 const PRIO = { HIGH: 12, MEDIUM: 5, LOW: 2 };
+// solver weights: an unserved kW always outweighs any grid value; generator value only breaks ties
+const UNSERVED_PEN = 1e6, GEN_TIE = 1e-5, MAX_FIX = 30;
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const HOURLY = [3900,3750,3680,3650,3700,3850,4200,4700,5000,5100,5100,5080,5050,5000,4950,4950,5050,5350,5500,5400,5150,4900,4600,4200];
 
@@ -563,7 +580,7 @@ class Component extends DCLogic {
   state = {
     theme: 'nocturne', tab: 'home',
     openChart: null, openHall: null, sheet: null, toast: null,
-    target: 15, planHour: null, plan: null,
+    planHour: null,
     clusterLimit: 65, dcLimit: 25, genLimit: 15,
     request: { siteId: null, kw: 20 },
     feeds: [{ id: 'f1', name: 'Power Grid Connection 1', closed: true }, { id: 'f2', name: 'Power Grid Connection 2', closed: true }],
@@ -602,8 +619,7 @@ class Component extends DCLogic {
         { id: 's3h5', name: 'Hall 5', usage: 1, priority: 'LOW', source: 'GENERATOR', profile: 'batch' },
         { id: 's3h6', name: 'Hall 6', usage: 4, priority: 'MEDIUM', source: 'GRID', profile: 'business' }
       ] }
-    ],
-    log: []
+    ]
   };
 
   componentDidMount() {
@@ -670,7 +686,7 @@ class Component extends DCLogic {
       Object.keys(s.data).forEach(k => {
         out[k] = { times: s.data[k].times.slice(1).concat([d]), values: s.data[k].values.slice(1).concat([smp[k]]) };
       });
-      return { data: out, lastTick: d };
+      return { data: out };
     });
   }
 
@@ -697,9 +713,10 @@ class Component extends DCLogic {
   }
 
   // ── helpers ───────────────────────────────────────────────────────
-  effClusterLimit() {
+  // each closed grid connection carries an equal share of the configured cluster limit
+  effClusterLimit(limit) {
     const S = this.state, on = S.feeds.filter(f => f.closed).length;
-    return Math.round(S.clusterLimit * on / Math.max(1, S.feeds.length));
+    return Math.round((limit === undefined ? S.clusterLimit : limit) * on / Math.max(1, S.feeds.length));
   }
 
   factorFor(hour) {
@@ -707,10 +724,6 @@ class Component extends DCLogic {
     return w ? w.mult : 1;
   }
   windowFor(hour) { return this.state.windows.find(x => hour >= x.from && hour < x.to) || null; }
-  costOf(hall, hour) {
-    const base = PRIO[hall.priority] || 5;
-    return hall.profile === 'batch' ? base * 0.6 : base * this.factorFor(hour);
-  }
   allHalls() {
     const out = [];
     this.state.sites.forEach(s => s.halls.forEach(h => out.push(Object.assign({}, h, { site: s.name, siteId: s.id }))));
@@ -725,45 +738,60 @@ class Component extends DCLogic {
     return v + (h.source === 'GRID' ? 0.15 : 0);
   }
 
-  // 0/1 knapsack inside one datacentre: best priority value for every exact grid load
-  siteKnapsack(halls, cap, hour) {
-    const n = halls.length, dp = [];
-    for (let i = 0; i <= n; i++) dp.push(new Array(cap + 1).fill(-1));
-    dp[0][0] = 0;
+  // one datacentre: every hall goes to grid, generator or unserved. Exact DP over
+  // (grid load, generator load), whole halls only. For every exact grid load it keeps the
+  // assignment that leaves the fewest kW unserved, then holds the most value on grid.
+  siteKnapsack(halls, cap, gen, hour) {
+    const n = halls.length, G = gen + 1, size = (cap + 1) * G;
+    let dp = new Float64Array(size).fill(-Infinity); dp[0] = 0;
+    const choice = [];
     for (let i = 0; i < n; i++) {
       const u = halls[i].usage, v = this.hallValue(halls[i], hour);
+      const next = new Float64Array(size).fill(-Infinity), ch = new Uint8Array(size);
       for (let w = 0; w <= cap; w++) {
-        if (dp[i][w] < 0) continue;
-        if (dp[i][w] > dp[i + 1][w]) dp[i + 1][w] = dp[i][w];
-        if (w + u <= cap && dp[i][w] + v > dp[i + 1][w + u]) dp[i + 1][w + u] = dp[i][w] + v;
+        for (let g = 0; g < G; g++) {
+          const cur = dp[w * G + g];
+          if (cur === -Infinity) continue;
+          let k = w * G + g, x = cur - u * UNSERVED_PEN;
+          if (x > next[k]) { next[k] = x; ch[k] = 0; }
+          if (g + u < G) { k = w * G + g + u; x = cur + v * GEN_TIE; if (x > next[k]) { next[k] = x; ch[k] = 1; } }
+          if (w + u <= cap) { k = (w + u) * G + g; x = cur + v; if (x > next[k]) { next[k] = x; ch[k] = 2; } }
+        }
       }
+      choice.push(ch); dp = next;
     }
     const out = [];
     for (let w = 0; w <= cap; w++) {
-      if (dp[n][w] < 0) { out.push(null); continue; }
-      const ids = []; let ww = w;
-      for (let i = n; i > 0; i--) {
-        const u = halls[i - 1].usage, v = this.hallValue(halls[i - 1], hour);
-        if (ww - u >= 0 && dp[i - 1][ww - u] >= 0 && Math.abs(dp[i][ww] - (dp[i - 1][ww - u] + v)) < 1e-9) { ids.push(halls[i - 1].id); ww -= u; }
+      let gBest = -1;
+      for (let g = 0; g < G; g++) if (dp[w * G + g] > -Infinity && (gBest < 0 || dp[w * G + g] > dp[w * G + gBest])) gBest = g;
+      if (gBest < 0) { out.push(null); continue; }
+      const ids = [], genIds = [], unservedIds = [];
+      let ww = w, gg = gBest;
+      for (let i = n - 1; i >= 0; i--) {
+        const c = choice[i][ww * G + gg], h = halls[i];
+        if (c === 2) { ids.push(h.id); ww -= h.usage; }
+        else if (c === 1) { genIds.push(h.id); gg -= h.usage; }
+        else unservedIds.push(h.id);
       }
-      out.push({ w, value: dp[n][w], ids });
+      out.push({ w, value: dp[w * G + gBest], ids, genIds, unservedIds });
     }
     return out;
   }
 
-  // nested fill: per-datacentre bags inside the cluster bag, cluster headroom allocated freely
+  // nested fill: per-datacentre bags inside the cluster bag, cluster headroom allocated freely.
+  // over.clusterLimit is a configured limit; open grid connections still scale it down.
   solveFill(hour, req, over) {
-    const S = this.state;
-    const dcCap = (over && over.dcLimit) || S.dcLimit;
-    const cCap = over && over.clusterLimit !== undefined ? over.clusterLimit : this.effClusterLimit();
-    const gen = (over && over.genLimit) || S.genLimit;
-    const PEN = 200;
+    const S = this.state, o = over || {};
+    const dcCap = o.dcLimit !== undefined ? o.dcLimit : S.dcLimit;
+    const cCap = this.effClusterLimit(o.clusterLimit);
+    const gen = o.genLimit !== undefined ? o.genLimit : S.genLimit;
     const sites = S.sites.map(s => {
       let halls = s.halls.map(h => ({ ...h, site: s.name, siteId: s.id }));
       if (req && req.siteId === s.id && req.kw > 0)
         halls = halls.concat([{ id: s.id + '-req', name: 'Requested load', usage: req.kw, priority: 'HIGH', profile: 'business', source: 'REQUEST', isRequest: true, site: s.name, siteId: s.id }]);
       const installed = halls.reduce((a, h) => a + h.usage, 0);
-      return { id: s.id, name: s.name, halls, installed, cap: Math.min(dcCap, installed), best: this.siteKnapsack(halls, Math.min(dcCap, installed), hour) };
+      const cap = Math.min(dcCap, installed);
+      return { id: s.id, name: s.name, halls, installed, cap, best: this.siteKnapsack(halls, cap, Math.min(gen, installed), hour) };
     });
     const n = sites.length, dp = [], ch = [];
     for (let i = 0; i <= n; i++) { dp.push(new Array(cCap + 1).fill(-Infinity)); ch.push(new Array(cCap + 1).fill(-1)); }
@@ -775,7 +803,7 @@ class Component extends DCLogic {
         for (let w = 0; w < st.best.length; w++) {
           const b = st.best[w];
           if (!b || w > r) continue;
-          const val = dp[i][r] + b.value - Math.max(0, st.installed - w - gen) * PEN;
+          const val = dp[i][r] + b.value;
           if (val > dp[i + 1][r - w]) { dp[i + 1][r - w] = val; ch[i + 1][r - w] = w; }
         }
       }
@@ -785,21 +813,21 @@ class Component extends DCLogic {
     const ws = []; let r = rBest;
     for (let i = n; i > 0; i--) { const w = ch[i][r]; ws.unshift(w < 0 ? 0 : w); r += (w < 0 ? 0 : w); }
     let captured = 0, switches = 0, gridTotal = 0, unservedAll = [];
+    const byValue = (a, c) => this.hallValue(c, hour) - this.hallValue(a, hour);
     const result = sites.map((st, i) => {
-      const w = ws[i], b = st.best[w], gridIds = b ? b.ids : [];
+      const w = ws[i], b = st.best[w];
+      const gridIds = b ? b.ids : [], genIds = b ? b.genIds : [];
       const onGrid = st.halls.filter(h => gridIds.indexOf(h.id) > -1);
-      const off = st.halls.filter(h => gridIds.indexOf(h.id) < 0).sort((a, c) => this.hallValue(c, hour) - this.hallValue(a, hour));
-      let genUsed = 0; const onGen = [], unserved = [];
-      off.forEach(h => { if (genUsed + h.usage <= gen) { genUsed += h.usage; onGen.push(h); } else unserved.push(h); });
+      const onGen = st.halls.filter(h => genIds.indexOf(h.id) > -1).sort(byValue);
+      const unserved = st.halls.filter(h => gridIds.indexOf(h.id) < 0 && genIds.indexOf(h.id) < 0).sort(byValue);
+      const genUsed = onGen.reduce((a, h) => a + h.usage, 0);
+      const nextOf = {};
+      st.halls.forEach(h => { nextOf[h.id] = gridIds.indexOf(h.id) > -1 ? 'GRID' : (genIds.indexOf(h.id) > -1 ? 'GENERATOR' : 'UNSERVED'); });
       captured += onGrid.reduce((a, h) => a + this.hallValue(h, hour), 0);
       gridTotal += w;
-      st.halls.forEach(h => {
-        if (h.isRequest) return;
-        const next = gridIds.indexOf(h.id) > -1 ? 'GRID' : (unserved.indexOf(h) > -1 ? 'UNSERVED' : 'GENERATOR');
-        if (next !== h.source) switches++;
-      });
+      st.halls.forEach(h => { if (!h.isRequest && nextOf[h.id] !== h.source) switches++; });
       unservedAll = unservedAll.concat(unserved);
-      return { id: st.id, name: st.name, halls: st.halls, installed: st.installed, w, cap: st.cap, onGrid, onGen, unserved, genUsed, gridIds };
+      return { id: st.id, name: st.name, halls: st.halls, installed: st.installed, w, cap: st.cap, onGrid, onGen, unserved, genUsed, gridIds, nextOf };
     });
     let reqHall = null;
     result.forEach(st => st.halls.forEach(h => { if (h.isRequest) reqHall = h; }));
@@ -808,7 +836,11 @@ class Component extends DCLogic {
   }
 
   // smallest single-lever capacity increase that serves every hall
+  // the increase is in the configured setting, so with a grid connection open the cluster
+  // lever has to cover the halved ceiling. Raising a capacity never adds unserved load,
+  // so each lever is a binary search.
   minFix(hour, req) {
+    const S = this.state;
     const levers = [
       { key: 'clusterLimit', label: 'cluster firm capacity' },
       { key: 'dcLimit', label: 'per-datacentre limit' },
@@ -816,13 +848,12 @@ class Component extends DCLogic {
     ];
     let best = null;
     levers.forEach(lv => {
-      for (let add = 1; add <= 30; add++) {
-        const over = {}; over[lv.key] = (lv.key === 'clusterLimit' ? this.effClusterLimit() : this.state[lv.key]) + add;
-        if (this.solveFill(hour, req, over).unserved.length === 0) {
-          if (!best || add < best.add) best = { add, label: lv.label, key: lv.key };
-          break;
-        }
-      }
+      if (lv.key === 'clusterLimit' && !S.feeds.some(f => f.closed)) return;
+      const clears = add => { const over = {}; over[lv.key] = S[lv.key] + add; return this.solveFill(hour, req, over).unserved.length === 0; };
+      if (!clears(MAX_FIX)) return;
+      let lo = 1, hi = MAX_FIX;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (clears(mid)) hi = mid; else lo = mid + 1; }
+      if (!best || lo < best.add) best = { add: lo, label: lv.label, key: lv.key };
     });
     return best;
   }
@@ -833,7 +864,7 @@ class Component extends DCLogic {
     this.toastT = setTimeout(() => this.setState({ toast: null }), 3200);
   }
   patchHall(id, patch) {
-    this.setState(s => ({ sites: s.sites.map(si => ({ ...si, halls: si.halls.map(h => h.id === id ? { ...h, ...patch } : h) })), plan: null }));
+    this.setState(s => ({ sites: s.sites.map(si => ({ ...si, halls: si.halls.map(h => h.id === id ? { ...h, ...patch } : h) })) }));
   }
 
   path(values, w, h) {
@@ -940,45 +971,13 @@ class Component extends DCLogic {
       });
     }
 
-    // ── status ──
-    let statusLabel = 'NORMAL', statusColor = 'var(--eg-accent)';
-    let headline = [], gridLoadLabel = '—', suggestions = [], alerts = [];
-    if (D) {
-      const dv = D.demand.values, dem = dv[dv.length - 1];
-      const peak = Math.max(...dv);
-      const windNow = D.wind.values[D.wind.values.length - 1];
-      const co2Now = D.co2.values[D.co2.values.length - 1];
-      const share = windNow / dem;
-      if (dem >= peak * 0.97) { statusLabel = 'TIGHT'; statusColor = 'var(--eg-red)'; }
-      else if (co2Now > 400) { statusLabel = 'HIGH CARBON'; statusColor = 'var(--eg-amber)'; }
-      else if (share > 0.5) { statusLabel = 'WIND SURPLUS'; statusColor = 'var(--eg-good)'; }
-      const BIG = { fontSize: '21px', fontWeight: 600, letterSpacing: '-.03em' };
-      headline = [
-        { label: 'Demand', value: this.n0(dem), unit: 'MW', sub: 'peak ' + this.n0(peak), valueStyle: { ...BIG, color: 'var(--eg-text)' } },
-        { label: 'Wind', value: this.n0(windNow), unit: 'MW', sub: (share * 100).toFixed(0) + '% of demand', valueStyle: { ...BIG, color: 'var(--eg-blue)' } },
-        { label: 'Carbon', value: this.n0(co2Now), unit: 'g/kWh', sub: co2Now > 400 ? 'above target' : 'within range', valueStyle: { ...BIG, color: 'var(--eg-amber)' } }
-      ];
-      gridLoadLabel = this.gridLoad() + ' ' + unit + ' of ' + S.clusterLimit + ' ' + unit + ' firm';
-
-      const win = this.windowFor(S.now.getHours());
-      const base = [
-        dem >= peak * 0.97
-          ? { icon: 'ph-trend-up', sev: 'var(--eg-red)', title: 'Demand near daily peak', detail: 'All-island demand ' + this.n0(dem) + ' MW against a ' + this.n0(peak) + ' MW peak. Grid space is worth defending for the highest-priority halls.', time: this.hm(S.now) }
-          : { icon: 'ph-check-circle', sev: 'var(--eg-good)', title: 'Demand inside normal band', detail: 'All-island demand ' + this.n0(dem) + ' MW, ' + this.n0(peak - dem) + ' MW below today’s peak.', time: this.hm(S.now) },
-        { icon: co2Now > 400 ? 'ph-cloud' : 'ph-leaf', sev: co2Now > 400 ? 'var(--eg-amber)' : 'var(--eg-good)', title: co2Now > 400 ? 'Carbon intensity elevated' : 'Carbon intensity moderate', detail: this.n0(co2Now) + ' g/kWh on the all-island system.', time: this.hm(new Date(S.now.getTime() - 9 * 60000)) },
-        { icon: 'ph-wind', sev: 'var(--eg-blue)', title: share > 0.5 ? 'Wind covering over half of demand' : 'Wind at ' + (share * 100).toFixed(0) + '% of demand', detail: this.n0(windNow) + ' MW of wind on the system.', time: this.hm(new Date(S.now.getTime() - 21 * 60000)) },
-        { icon: 'ph-clock-countdown', sev: win && win.mult >= 1.8 ? 'var(--eg-red)' : 'var(--eg-muted)', title: win ? win.label + ' — value factor ×' + win.mult : 'No window rule', detail: win ? 'Business-hours halls are worth ' + win.mult + '× on grid between ' + String(win.from).padStart(2, '0') + ':00 and ' + String(win.to).padStart(2, '0') + ':00.' : '', time: this.hm(S.now) },
-        { icon: 'ph-plugs', sev: 'var(--eg-muted)', title: 'Generator-backed halls', detail: this.genLoad() + ' ' + unit + ' across ' + this.allHalls().filter(h => h.source === 'GENERATOR').length + ' halls currently off grid.', time: this.hm(new Date(S.now.getTime() - 42 * 60000)) }
-      ];
-      alerts = S.log.concat(base).map(a => ({ ...a, iconStyle: { width: '28px', height: '28px', borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', background: 'var(--eg-line-soft)', color: a.sev } }));
-    }
-
     // ── allocation (live preview) ──
     const SITE_C = ['var(--eg-accent)', 'var(--eg-blue)', 'var(--eg-violet)', 'var(--eg-good)', 'var(--eg-yellow)'];
-    const req = S.request.siteId && S.request.kw > 0 ? S.request : null;
-    const fill = this.solveFill(hour, req);
-    const baseFill = req ? this.solveFill(hour, null) : fill;
-    const winF = this.windowFor(hour);
+    const hh = String(hour).padStart(2, '0') + ':00';
+    const req = S.request.siteId && S.request.kw > 0 && S.sites.some(s => s.id === S.request.siteId) ? S.request : null;
+    // advice and Apply only ever see the real halls; the requested load is a what-if
+    const fill = this.solveFill(hour, null);
+    const reqFill = req ? this.solveFill(hour, req) : null;
     const siteColor = {};
     S.sites.forEach((s, i) => { siteColor[s.id] = SITE_C[i % SITE_C.length]; });
 
@@ -992,14 +991,14 @@ class Component extends DCLogic {
         return { style: { width: (kw / Math.max(1, Math.max(actCap, actUsed)) * 100) + '%', height: '100%', background: actOver ? 'var(--eg-red)' : siteColor[s.id], borderRight: '1px solid var(--eg-bg2)' } };
       }).filter(x => parseFloat(x.style.width) > 0)
     };
-    const fix = fill.unserved.length ? this.minFix(hour, req) : null;
+    const fix = fill.unserved.length ? this.minFix(hour, null) : null;
     const requestSites = [{ id: null, label: 'None' }].concat(S.sites.map(s => ({ id: s.id, label: s.name }))).map(o => ({
       label: o.label,
       onPick: () => this.setState(s => ({ request: { ...s.request, siteId: o.id } })),
       style: { ...BTN, minHeight: '36px', padding: '0 11px', borderRadius: '9px', fontSize: '11px', fontWeight: 600, color: 'var(--eg-muted)', ...(S.request.siteId === o.id ? { borderColor: 'var(--eg-accent)', background: 'var(--eg-accent-soft)', color: 'var(--eg-accent)' } : {}) }
     }));
-    const displaced = req ? baseFill.sites.reduce((acc, bs) => {
-      const ns = fill.sites.find(x => x.id === bs.id);
+    const displaced = req ? fill.sites.reduce((acc, bs) => {
+      const ns = reqFill.sites.find(x => x.id === bs.id);
       bs.gridIds.forEach(id => {
         if (ns && ns.gridIds.indexOf(id) < 0) {
           const h = bs.halls.find(x => x.id === id);
@@ -1008,14 +1007,30 @@ class Component extends DCLogic {
       });
       return acc;
     }, []) : [];
-    const reqSiteName = req ? (S.sites.find(s => s.id === req.siteId) || {}).name : '';
+    const reqSiteName = req ? S.sites.find(s => s.id === req.siteId).name : '';
+    let requestVerdict = '', reqState = 'none';
+    if (req) {
+      const rs = reqFill.sites.find(x => x.id === req.siteId);
+      reqState = reqFill.reqServed ? 'grid' : (rs.onGen.some(h => h.isRequest) ? 'generator' : 'none');
+      const at = ' at ' + reqSiteName + ' at ' + hh;
+      const why = req.kw > reqFill.dcCap ? 'it is larger than the ' + reqFill.dcCap + ' ' + unit + ' per-datacentre limit'
+        : req.kw > reqFill.clusterCap ? 'it is larger than the ' + reqFill.clusterCap + ' ' + unit + ' cluster ceiling'
+        : 'the halls already there need that substation space more';
+      const disp = displaced.length ? ', displacing ' + displaced.length + ' hall' + (displaced.length === 1 ? '' : 's') + ' from grid:' : '';
+      requestVerdict = reqState === 'grid'
+        ? req.kw + ' ' + unit + ' can be served on grid' + at + (disp || ' with no displacement.')
+        : reqState === 'generator'
+          ? req.kw + ' ' + unit + ' cannot get grid supply' + at + ' — ' + why + '. It would run on the site generator' + (disp || '.')
+          : req.kw + ' ' + unit + ' cannot be served' + at + ' — ' + why + ', and the generator has no room for it.';
+    }
 
     // ── schedule: value forfeited by the capacity squeeze, hour by hour ──
+    // only solved while the sheet is open; it ranks the real halls, like the advice
     const startHour = S.now.getHours();
     const hours = [];
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; S.sheet === 'schedule' && i < 24; i++) {
       const h = (startHour + i) % 24;
-      const f = this.solveFill(h, req);
+      const f = this.solveFill(h, null);
       const ideal = this.allHalls().reduce((a, x) => a + this.hallValue(x, h), 0);
       hours.push({ h, forfeit: Math.max(0, ideal - f.captured), unserved: f.unserved.length, captured: f.captured });
     }
@@ -1046,30 +1061,8 @@ class Component extends DCLogic {
       };
     });
 
-    // ── fleet ──
+    // ── hall detail ──
     const openHallRaw = S.openHall ? this.allHalls().find(h => h.id === S.openHall) : null;
-    const sites = S.sites.map(s => {
-      const grid = s.halls.filter(h => h.source === 'GRID').reduce((a, h) => a + h.usage, 0);
-      return {
-        name: s.name,
-        sub: s.halls.length + ' halls · ' + s.halls.reduce((a, h) => a + h.usage, 0) + ' ' + unit + ' installed',
-        gridLabel: grid + ' ' + unit,
-        halls: s.halls.map(h => ({
-          name: h.name, priority: h.priority, source: h.source,
-          usageLabel: h.usage + ' ' + unit,
-          sub: (h.profile === 'batch' ? 'Batch workload' : 'Business hours') + ' · value ' + this.hallValue(h, hour).toFixed(1),
-          prioStyle: prioStyle(h.priority), sourceStyle: sourceStyle(h.source),
-          onOpen: () => this.setState({ openHall: h.id })
-        }))
-      };
-    });
-    const STAT = { fontSize: '18px', fontWeight: 600, letterSpacing: '-.03em' };
-    const fleetStats = [
-      { label: 'On grid', value: this.gridLoad() + ' ' + unit, style: { ...STAT, color: 'var(--eg-accent)' } },
-      { label: 'On generator', value: this.genLoad() + ' ' + unit, style: STAT },
-      { label: 'Halls', value: String(this.allHalls().length), style: STAT }
-    ];
-
     let openHall = null;
     if (openHallRaw) {
       const shape = D ? D.demand.values : [];
@@ -1103,7 +1096,7 @@ class Component extends DCLogic {
     }
 
     const openChartObj = S.openChart === 'mix'
-      ? { label: 'Fuel Mix', about: 'The share of each fuel source supplying electricity right now.', isSeries: false, isMix: true, footer }
+      ? { label: 'Fuel Mix', about: 'Estimated share of each fuel source right now. Wind, solar and net imports are the latest readings; gas, coal & peat and other renewables are modelled from demand.', isSeries: false, isMix: true, footer }
       : (charts.find(c => c.key === S.openChart) || null);
 
     const tabs = [
@@ -1119,7 +1112,7 @@ class Component extends DCLogic {
 
     const win = this.windowFor(hour);
     return {
-      unit, frameDark: S.theme === 'nocturne',
+      unit,
       appStyle: { ...THEMES[S.theme], height: '100dvh', width: '100%', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--eg-bg)', color: 'var(--eg-text)', fontFamily: 'Inter,system-ui,sans-serif' },
       canInstall: !!S.canInstall,
       install: () => { if (this.deferred) { this.deferred.prompt(); this.deferred = null; this.setState({ canInstall: false }); } },
@@ -1128,17 +1121,16 @@ class Component extends DCLogic {
         : 'On iPhone and iPad, open the browser Share menu and choose Add to Home Screen. On Android and desktop Chrome an install button appears here once the browser offers it.',
       themeIcon: S.theme === 'nocturne' ? 'ph-sun' : 'ph-moon',
       toggleTheme: () => this.setState({ theme: S.theme === 'nocturne' ? 'organic' : 'nocturne' }),
-      clockLabel: this.hm(S.now) + (S.planHour === null ? '' : ' · planning ' + String(hour).padStart(2, '0') + ':00'),
+      clockLabel: this.hm(S.now) + (S.planHour === null ? '' : ' · planning ' + hh),
+      isPlanning: S.planHour !== null,
+      resetPlanHour: () => this.setState({ planHour: null }),
       liveLabel: S.live ? 'LIVE' : 'SNAPSHOT',
       liveDotStyle: { width: '6px', height: '6px', borderRadius: '99px', flex: 'none', animation: 'eg-pulse 2.4s ease-in-out infinite', background: S.live ? 'var(--eg-good)' : 'var(--eg-amber)' },
       dataNote: S.note,
       refetch: () => { this.setState({ note: 'Reaching the EirGrid feed…' }); this.tryLive(); },
       isHome: S.tab === 'home', isGrid: S.tab === 'grid', isSettings: S.tab === 'settings',
       chartWindowLabel: charts.length ? charts[0].windowLabel : '',
-      tabs, charts, mix, headline, gridLoadLabel, suggestions, alerts,
-      alertCountLabel: alerts.length + ' items',
-      statusLabel, statusChipStyle: { fontSize: '9.5px', fontWeight: 700, letterSpacing: '.06em', padding: '4px 9px', borderRadius: '999px', flex: 'none', whiteSpace: 'nowrap', color: statusColor, border: '1px solid ' + statusColor },
-      goPlan: () => this.setState({ tab: 'grid' }),
+      tabs, charts, mix,
       openMix: () => this.setState({ openChart: 'mix' }),
       openSchedule: () => this.setState({ sheet: 'schedule' }),
       closeSheets: () => this.setState({ openChart: null, openHall: null, sheet: null }),
@@ -1159,7 +1151,7 @@ class Component extends DCLogic {
       verdictIcon: actOver || fill.unserved.length ? 'ph-warning-octagon' : fill.switches ? 'ph-arrows-left-right' : 'ph-check-circle',
       verdictIconStyle: { fontSize: '16px', flex: 'none', marginTop: '1px', color: actOver || fill.unserved.length ? 'var(--eg-red)' : fill.switches ? 'var(--eg-amber)' : 'var(--eg-good)' },
       needsApply: fill.switches > 0,
-      planHourLabel: String(hour).padStart(2, '0') + ':00',
+      planHourLabel: hh,
       liveUsedStyle: { fontSize: '30px', fontWeight: 600, letterSpacing: '-.035em', color: actOver ? 'var(--eg-red)' : 'var(--eg-text)' },
       feedNodes: S.feeds.map(f => ({
         name: f.name, status: f.closed ? 'Connected' : 'Open',
@@ -1183,9 +1175,9 @@ class Component extends DCLogic {
       actual: actualView,
       diagramSites: S.sites.map(s => {
         const rc = fill.sites.find(x => x.id === s.id);
-        const moves = rc ? rc.halls.filter(h => !h.isRequest && (rc.gridIds.indexOf(h.id) > -1 ? 'GRID' : 'GENERATOR') !== (h.source === 'GRID' ? 'GRID' : 'GENERATOR')) : [];
+        const moves = rc ? rc.halls.filter(h => rc.nextOf[h.id] !== h.source) : [];
         const gridKw = s.halls.filter(h => h.source === 'GRID').reduce((a, h) => a + h.usage, 0);
-        const genKw = s.halls.filter(h => h.source !== 'GRID').reduce((a, h) => a + h.usage, 0);
+        const genKw = s.halls.filter(h => h.source === 'GENERATOR').reduce((a, h) => a + h.usage, 0);
         const live = gridKw > 0;
         const dcOver = gridKw > S.dcLimit;
         const genOver = genKw > S.genLimit;
@@ -1203,22 +1195,23 @@ class Component extends DCLogic {
           stubStyle: { width: '100%', height: '2px', background: live ? 'var(--eg-accent)' : 'var(--eg-line)' },
           arrowStyle: { position: 'absolute', right: '-4px', fontSize: '11px', color: live ? 'var(--eg-accent)' : 'var(--eg-line)' },
           recLine: moves.length
-            ? 'Advice: ' + moves.map(h => h.name + ' → ' + (rc.gridIds.indexOf(h.id) > -1 ? 'grid' : 'generator')).join(', ')
-            : 'Matches the advice for ' + String(hour).padStart(2, '0') + ':00',
+            ? 'Advice: ' + moves.map(h => h.name + ' → ' + rc.nextOf[h.id].toLowerCase()).join(', ')
+            : 'Matches the advice for ' + hh,
           recStyle: { fontSize: '10px', lineHeight: 1.45, marginTop: '9px', paddingTop: '8px', borderTop: '1px solid var(--eg-line-soft)', color: moves.length ? 'var(--eg-accent)' : 'var(--eg-muted)' },
           cardStyle: { flex: 1, minWidth: 0, margin: '5px 0', border: '1px solid ' + (dcOver || genOver ? 'var(--eg-red)' : 'var(--eg-line)'), borderRadius: '13px', background: 'var(--eg-surface)', padding: '12px 13px' },
           switchStyle: { width: '50px', height: '28px', flex: 'none', padding: '2px', borderRadius: '999px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: live ? 'flex-end' : 'flex-start', border: '1px solid ' + (live ? 'var(--eg-accent)' : 'var(--eg-line)'), background: live ? 'var(--eg-accent-soft)' : 'transparent' },
           knobStyle: { width: '22px', height: '22px', borderRadius: '99px', background: live ? 'var(--eg-accent)' : 'var(--eg-muted)' },
           onRename: e => { const v = e.target.value; this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, name: v } : x) })); },
-          onToggle: () => this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, halls: x.halls.map(h => ({ ...h, source: live ? 'GENERATOR' : 'GRID' })) } : x), plan: null })),
+          onToggle: () => this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, halls: x.halls.map(h => ({ ...h, source: live ? 'GENERATOR' : 'GRID' })) } : x) })),
           halls: s.halls.map(h => {
-            const g = h.source === 'GRID';
+            const g = h.source === 'GRID', un = h.source === 'UNSERVED';
+            const edge = g ? 'var(--eg-accent)' : un ? 'var(--eg-red)' : 'var(--eg-line)';
             return {
               label: h.name + ' · ' + h.usage,
-              icon: g ? 'ph-plug' : 'ph-battery-charging',
-              style: { minHeight: '32px', borderRadius: '8px', display: 'flex', alignItems: 'stretch', overflow: 'hidden', border: '1px solid ' + (g ? 'var(--eg-accent)' : 'var(--eg-line)'), background: g ? 'var(--eg-accent-soft)' : 'transparent', color: g ? 'var(--eg-accent)' : 'var(--eg-muted)' },
+              icon: g ? 'ph-plug' : un ? 'ph-warning-octagon' : 'ph-battery-charging',
+              style: { minHeight: '32px', borderRadius: '8px', display: 'flex', alignItems: 'stretch', overflow: 'hidden', border: '1px solid ' + edge, background: g ? 'var(--eg-accent-soft)' : un ? 'rgba(229,116,104,.14)' : 'transparent', color: g ? 'var(--eg-accent)' : un ? 'var(--eg-red)' : 'var(--eg-muted)' },
               toggleStyle: { padding: '0 8px', border: 0, background: 'transparent', color: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: 'Inter,system-ui,sans-serif', fontSize: '10.5px', fontWeight: 600, whiteSpace: 'nowrap' },
-              infoStyle: { padding: '0 7px', border: 0, borderLeft: '1px solid ' + (g ? 'var(--eg-accent)' : 'var(--eg-line)'), background: 'transparent', color: 'var(--eg-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+              infoStyle: { padding: '0 7px', border: 0, borderLeft: '1px solid ' + edge, background: 'transparent', color: 'var(--eg-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' },
               onToggle: () => this.patchHall(h.id, { source: g ? 'GENERATOR' : 'GRID' }),
               onOpen: () => this.setState({ openHall: h.id })
             };
@@ -1232,34 +1225,24 @@ class Component extends DCLogic {
       applyLabel: 'Move ' + fill.switches + ' hall' + (fill.switches === 1 ? '' : 's'),
       applyStyle: { minHeight: '46px', borderRadius: '11px', border: '1px solid var(--eg-accent)', fontFamily: 'Inter,system-ui,sans-serif', fontSize: '12.5px', fontWeight: 600, cursor: fill.switches ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: fill.switches ? 'var(--eg-accent)' : 'transparent', color: fill.switches ? 'var(--eg-accent-ink)' : 'var(--eg-muted)', borderColor: fill.switches ? 'var(--eg-accent)' : 'var(--eg-line)' },
       hasBreach: fill.unserved.length > 0,
-      breachTitle: fill.unserved.length + ' hall' + (fill.unserved.length === 1 ? '' : 's') + ' cannot be served at ' + String(hour).padStart(2, '0') + ':00',
       breachRows: fill.unserved.map(h => ({
         title: h.site + ' · ' + h.name,
-        usageLabel: h.usage + ' ' + unit,
-        reason: h.isRequest
-          ? 'No substation space at ' + h.site + ' — the ' + S.dcLimit + ' ' + unit + ' limit is full'
-          : 'No substation space and the ' + S.genLimit + ' ' + unit + ' generator at ' + h.site + ' is full'
+        usageLabel: h.usage + ' ' + unit
       })),
-      breachFix: fix ? 'Smallest fix: raise the ' + fix.label + ' by ' + fix.add + ' ' + unit + ' and every hall is served.' : 'No single capacity increase within 30 ' + unit + ' clears this — reduce installed load or lower a hall\'s draw.',
+      breachFix: fix ? 'Smallest fix: raise the ' + fix.label + ' setting by ' + fix.add + ' ' + unit + ' and every hall is served.' : 'No single capacity increase within ' + MAX_FIX + ' ' + unit + ' clears this — reduce installed load or lower a hall\'s draw.',
       requestSites, hasRequest: !!req, requestKw: String(S.request.kw),
       requestUp: () => this.setState(s => ({ request: { ...s.request, kw: Math.min(40, s.request.kw + 1) } })),
       requestDown: () => this.setState(s => ({ request: { ...s.request, kw: Math.max(1, s.request.kw - 1) } })),
-      requestIcon: fill.reqServed ? 'ph-check-circle' : 'ph-x-circle',
-      requestIconStyle: { fontSize: '16px', flex: 'none', color: fill.reqServed ? 'var(--eg-good)' : 'var(--eg-red)' },
-      requestVerdict: !req ? '' : (fill.reqServed
-        ? S.request.kw + ' ' + unit + ' can be served at ' + reqSiteName + ' at ' + String(hour).padStart(2, '0') + ':00' + (displaced.length ? ', by displacing ' + displaced.length + ' hall' + (displaced.length === 1 ? '' : 's') + ':' : ' with no displacement.')
-        : S.request.kw + ' ' + unit + ' cannot be served at ' + reqSiteName + ' at ' + String(hour).padStart(2, '0') + ':00 — the ' + S.dcLimit + ' ' + unit + ' substation limit blocks it even at HIGH priority.'),
-      requestDisplaced: fill.reqServed ? displaced : [],
+      requestIcon: reqState === 'grid' ? 'ph-check-circle' : reqState === 'generator' ? 'ph-battery-charging' : 'ph-x-circle',
+      requestIconStyle: { fontSize: '16px', flex: 'none', color: reqState === 'grid' ? 'var(--eg-good)' : reqState === 'generator' ? 'var(--eg-amber)' : 'var(--eg-red)' },
+      requestVerdict,
+      requestDisplaced: reqState !== 'none' ? displaced : [],
       applyPlan: () => {
         if (!fill.switches) return;
         const map = {};
-        fill.sites.forEach(st => st.halls.forEach(h => {
-          if (h.isRequest) return;
-          map[h.id] = st.gridIds.indexOf(h.id) > -1 ? 'GRID' : (st.unserved.indexOf(h) > -1 ? 'UNSERVED' : 'GENERATOR');
-        }));
+        fill.sites.forEach(st => Object.assign(map, st.nextOf));
         this.setState(s => ({
-          sites: s.sites.map(si => ({ ...si, halls: si.halls.map(h => map[h.id] ? { ...h, source: map[h.id] } : h) })),
-          log: [{ icon: 'ph-power', sev: 'var(--eg-accent)', title: 'Allocation applied — ' + fill.gridTotal + ' ' + unit + ' on grid', detail: fill.switches + ' halls switched at ' + this.hm(new Date()) + ', priority value captured ' + fill.captured.toFixed(1) + ' of ' + fill.clusterCap + ' ' + unit + ' firm capacity.', time: this.hm(new Date()) }].concat(s.log)
+          sites: s.sites.map(si => ({ ...si, halls: si.halls.map(h => map[h.id] ? { ...h, source: map[h.id] } : h) }))
         }));
         this.showToast(fill.switches + ' halls switched · ' + fill.gridTotal + ' ' + unit + ' on grid');
       },
@@ -1272,7 +1255,6 @@ class Component extends DCLogic {
         up: () => this.setState(s => { const o = {}; o[c.key] = Math.min(c.max, s[c.key] + 5); return o; }),
         down: () => this.setState(s => { const o = {}; o[c.key] = Math.max(c.min, s[c.key] - 5); return o; })
       })),
-      priorityLegend: ['HIGH', 'MEDIUM', 'LOW'].map(p => ({ label: p, cost: String(PRIO[p]), style: { fontSize: '9.5px', fontWeight: 700, letterSpacing: '.05em', color: T[p].color } })),
       toast: S.toast,
       themeOptions: [
         { key: 'nocturne', label: 'Nocturne', sub: 'Dark control room', sw: 'linear-gradient(135deg,#0f1a1e,#2ec4a8)' },
@@ -1288,27 +1270,26 @@ class Component extends DCLogic {
         multLabel: '×' + w.mult.toFixed(1),
         tag: w.mult >= 1.5 ? 'HARD' : w.mult <= 0.8 ? 'EASY' : 'NORMAL',
         tagStyle: { ...CHIP, ...(w.mult >= 1.5 ? { color: 'var(--eg-red)', background: 'rgba(229,116,104,.14)' } : w.mult <= 0.8 ? { color: 'var(--eg-good)', background: 'rgba(63,196,143,.14)' } : { color: 'var(--eg-muted)', background: 'var(--eg-line-soft)' }) },
-        up: () => this.setState(s => ({ windows: s.windows.map(x => x.id === w.id ? { ...x, mult: Math.min(4, +(x.mult + 0.2).toFixed(1)) } : x), plan: null })),
-        down: () => this.setState(s => ({ windows: s.windows.map(x => x.id === w.id ? { ...x, mult: Math.max(0.2, +(x.mult - 0.2).toFixed(1)) } : x), plan: null }))
+        up: () => this.setState(s => ({ windows: s.windows.map(x => x.id === w.id ? { ...x, mult: Math.min(4, +(x.mult + 0.2).toFixed(1)) } : x) })),
+        down: () => this.setState(s => ({ windows: s.windows.map(x => x.id === w.id ? { ...x, mult: Math.max(0.2, +(x.mult - 0.2).toFixed(1)) } : x) }))
       })),
       siteConfig: S.sites.map(s => ({
         name: s.name,
         sub: s.halls.length + ' halls · ' + s.halls.reduce((a, h) => a + h.usage, 0) + ' ' + unit,
         onRename: e => { const v = e.target.value; this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, name: v } : x) })); },
-        onDelete: () => this.setState(st => ({ sites: st.sites.filter(x => x.id !== s.id), plan: null })),
-        addHall: () => this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, halls: x.halls.concat([{ id: s.id + 'h' + (Date.now() % 100000), name: 'Hall ' + (x.halls.length + 1), usage: 4, priority: 'MEDIUM', source: 'GRID', profile: 'batch' }]) } : x), plan: null })),
-        removeHall: () => this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, halls: x.halls.slice(0, Math.max(1, x.halls.length - 1)) } : x), plan: null }))
+        onDelete: () => this.setState(st => ({
+          sites: st.sites.filter(x => x.id !== s.id),
+          request: st.request.siteId === s.id ? { ...st.request, siteId: null } : st.request,
+          openHall: s.halls.some(h => h.id === st.openHall) ? null : st.openHall
+        })),
+        addHall: () => this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, halls: x.halls.concat([{ id: s.id + 'h' + (Date.now() % 100000), name: 'Hall ' + (x.halls.length + 1), usage: 4, priority: 'MEDIUM', source: 'GRID', profile: 'batch' }]) } : x) })),
+        removeHall: () => this.setState(st => ({ sites: st.sites.map(x => x.id === s.id ? { ...x, halls: x.halls.slice(0, Math.max(1, x.halls.length - 1)) } : x) }))
       })),
       addSite: () => this.setState(st => {
         const id = 'site' + (Date.now() % 100000);
         const halls = [1, 2, 3, 4, 5, 6].map(i => ({ id: id + 'h' + i, name: 'Hall ' + i, usage: [5, 3, 2, 1, 7, 10][i - 1], priority: ['HIGH', 'LOW', 'MEDIUM', 'LOW', 'LOW', 'HIGH'][i - 1], source: 'GRID', profile: i % 2 ? 'business' : 'batch' }));
-        return { sites: st.sites.concat([{ id, name: 'Datacentre ' + (st.sites.length + 1), halls }]), plan: null };
-      }),
-      restoreAll: () => {
-        this.setState(s => ({ sites: s.sites.map(si => ({ ...si, halls: si.halls.map(h => ({ ...h, source: 'GRID' })) })), plan: null }));
-        this.showToast('Every hall returned to grid supply');
-      },
-      sites, fleetStats
+        return { sites: st.sites.concat([{ id, name: 'Datacentre ' + (st.sites.length + 1), halls }]) };
+      })
     };
   }
 }

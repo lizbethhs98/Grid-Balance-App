@@ -61,28 +61,28 @@ A hall already on grid carries a **+0.15 incumbency bonus** — just enough to b
 
 Halls the substation cannot carry fall through in order:
 
-1. **Generator** — up to a per-site generator capacity (default **15 kW**), filled highest-value first.
+1. **Generator** — up to a per-site generator capacity (default **15 kW**). Halls are whole, so the solver packs them to leave as little load unpowered as possible.
 2. **Unserved** — anything the generator cannot hold either is flagged in red, and the app computes the smallest single capacity increase (cluster, datacentre or generator) that would clear it.
+
+The priorities are strict: first leave the fewest kW unserved, then keep the most priority value on grid, and only then prefer higher-value halls on the generator.
 
 ### How it is solved
 
 ```
 for each datacentre:
-    0/1 knapsack over its halls          → best achievable value at every exact load 0…dcLimit
+    every hall → grid, generator or unserved
+    DP over (grid load, generator load)  → best assignment at every exact grid load 0…dcLimit
 then:
-    knapsack over the datacentres        → distribute clusterLimit across those curves
-                                           minus a heavy penalty per unserved kW
-then:
-    fill each site's generator by value  → the remainder is unserved
+    knapsack over the datacentres        → distribute the cluster ceiling across those curves
 ```
 
-Both passes are exact dynamic programming, not a greedy heuristic. The whole allocation recomputes on every render — changing the hour, a priority, a draw or a capacity re-solves immediately. Nothing switches until the operator presses **Apply**.
+Both passes are exact dynamic programming, not a greedy heuristic — checked against exhaustive search. The whole allocation recomputes on every render — changing the hour, a priority, a draw or a capacity re-solves immediately. Nothing switches until the operator presses **Apply**.
 
 ---
 
 ## Screens
 
-**Home** — the six real-time series from the EirGrid public dashboard: system demand, wind generation, CO₂ intensity, solar generation, interconnection, and the fuel mix. Cards show the last four hours; tapping one opens the full 24 hours at 15-minute resolution with min, average and max.
+**Home** — the five real-time series from the EirGrid public dashboard: system demand, wind generation, CO₂ intensity, solar generation and interconnection, plus an estimated fuel mix. Cards show the last four hours; tapping one opens the full 24 hours at 15-minute resolution with min, average and max. The fuel mix uses the latest wind, solar and import readings; gas, coal & peat and other renewables are modelled from demand.
 
 **Grid** — the single-line diagram and the allocation in one screen, read top to bottom in the direction the power flows:
 
@@ -90,9 +90,9 @@ Both passes are exact dynamic programming, not a greedy heuristic. The whole all
 2. **Cluster substation** — steps the supply down and shares it out below. Its bar is how much of the firm capacity the halls are currently drawing.
 3. **Advice** — the solver's verdict for the current hour, the halls that cannot be served, the smallest capacity fix, and an **Apply** button. Nothing switches until it is pressed.
 4. **Datacentres** — hanging off the bus, each with its live kW, a switch for the whole site, and a chip per hall. Tapping a chip moves that hall between grid and generator; its slider icon opens the hall detail. A line under each site shows what the solver would do differently.
-5. **Can I add more load?** — pick a datacentre and a kW figure; the load enters the bag as a HIGH-priority item and the app reports whether it can be served and which halls it displaces.
+5. **Can I add more load?** — pick a datacentre and a kW figure; the load enters the bag as a HIGH-priority item and the app reports whether it can be served on grid, only on generator, or not at all, and which halls it displaces. It is a what-if: the advice and **Apply** above never include it.
 
-**Best hours** re-solves the next 24 hours and ranks them by priority value forfeited to the capacity squeeze.
+**Best hours** re-solves the next 24 hours and ranks them by priority value forfeited to the capacity squeeze. Tapping an hour plans for that hour; **Now** returns the advice to the clock.
 
 **Settings** — theme, capacity limits, time-window multipliers, datacentre and hall configuration, data source, and install.
 
