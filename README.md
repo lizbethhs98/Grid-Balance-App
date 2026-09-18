@@ -84,19 +84,20 @@ Both passes are exact dynamic programming, not a greedy heuristic — checked ag
 
 **Home** — the five real-time series from the EirGrid public dashboard: system demand, wind generation, CO₂ intensity, solar generation and interconnection, plus an estimated fuel mix. Cards show the last four hours; tapping one opens the full 24 hours at 15-minute resolution with min, average and max. The fuel mix uses the latest wind, solar and import readings; gas, coal & peat and other renewables are modelled from demand.
 
-**Grid** — the single-line diagram and the allocation in one screen, read top to bottom in the direction the power flows:
+**Schematic** — the single-line diagram and the allocation, read in the direction the power flows:
 
-1. **Grid supply in** — the two incoming grid connections, each with a switch. Each carries half the substation's capacity, so opening one halves the ceiling.
-2. **Cluster substation** — steps the supply down and shares it out below. Its bar is how much of the firm capacity the halls are currently drawing.
+1. **Diagram** — the two incoming grid connections, each with a breaker you can tap to open or close, feeding the cluster substation and the datacentres. Each connection carries half the substation's capacity, so opening one halves the ceiling. Tapping a datacentre opens its halls.
+2. **Cluster substation** — its bar is how much of the firm capacity the halls are currently drawing.
 3. **Advice** — the solver's verdict for the current hour, the halls that cannot be served, the smallest capacity fix, and an **Apply** button. Nothing switches until it is pressed.
-4. **Datacentres** — hanging off the bus, each with its live kW, a switch for the whole site, and a chip per hall. Tapping a chip moves that hall between grid and generator; its slider icon opens the hall detail. A line under each site shows what the solver would do differently.
-5. **Can I add more load?** — pick a datacentre and a kW figure; the load enters the bag as a HIGH-priority item and the app reports whether it can be served on grid, only on generator, or not at all, and which halls it displaces. It is a what-if: the advice and **Apply** above never include it.
+4. **Can I add more load?** — pick a datacentre and a kW figure; the load enters the bag as a HIGH-priority item and the app reports whether it can be served on grid, only on generator, or not at all, and which halls it displaces. It is a what-if: the advice and **Apply** above never include it.
+
+**Halls** — every hall, grouped by datacentre and filterable per site, each with its draw, priority and source and a shutdown status for the current hour: **BLOCKED** (too valuable to drop), **CAUTION** (can move if needed), **CLEAR** (free to shed) or **UNSERVED**. Each datacentre has a switch for the whole site.
 
 **Best hours** re-solves the next 24 hours and ranks them by priority value forfeited to the capacity squeeze. Tapping an hour plans for that hour; **Now** returns the advice to the clock.
 
 **Settings** — theme, capacity limits, time-window multipliers, datacentre and hall configuration, data source, and install.
 
-The hall detail panel holds the 24-hour draw curve, priority, power draw, the hall's current grid value and a manual grid/generator switch.
+The hall detail panel holds a gauge of the hall's grid value with its shutdown verdict, priority, power draw, pre-shutdown checks (generator headroom, priority, cluster spare capacity, grid conditions) and a manual grid/generator switch.
 
 ---
 
@@ -151,7 +152,7 @@ It then opens full screen with no browser chrome, respecting the device's safe a
 Responsive, one breakpoint at 900 px.
 
 - **Below** — single column, bottom tab bar, panels as bottom sheets.
-- **Above** — centred ~960 px column, tabs in the header, charts three across, panels as centred dialogs. The datacentres stay stacked so the vertical bus of the diagram still reads.
+- **Above** — centred column scaled up, charts three across, panels as centred dialogs.
 
 ---
 
